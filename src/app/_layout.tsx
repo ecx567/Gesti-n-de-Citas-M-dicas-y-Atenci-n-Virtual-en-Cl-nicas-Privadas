@@ -1,14 +1,29 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { AuthProvider, useAuth } from '@/ctx';
 
 /**
  * Inner layout that reads auth state and conditionally renders.
- * - Loading → shows nothing (the splash screen at index.tsx handles UI)
- * - Otherwise → renders the current route via <Stack />
+ * - Loading → shows loading indicator
+ * - Unauthenticated → redirects to auth group (login)
+ * - Authenticated → renders current route via <Stack />
  */
 function RootLayoutNav() {
   const { session } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+
+  // Auth guard: redirect unauthenticated users to the login screen
+  useEffect(() => {
+    if (session === 'loading') return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (session === 'unauthenticated' && !inAuthGroup) {
+      router.replace('/(auth)/login');
+    }
+  }, [session, segments, router]);
 
   if (session === 'loading') {
     return (
