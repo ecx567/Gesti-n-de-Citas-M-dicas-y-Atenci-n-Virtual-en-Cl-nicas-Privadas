@@ -121,12 +121,53 @@ export interface ApiClientConfig {
   url: string;
   body?: unknown;
   authenticated?: boolean;
-  params?: Record<string, string>;
+  params?: Record<string, string | number | undefined>;
 }
 
 export interface ApiClientResponse<T> {
   data: T;
   response: Response;
+}
+
+/**
+ * Retry the original request with the refreshed token.
+ * Extracted to avoid duplicating fetch + timeout logic.
+ */
+async function retryRequest<T>(
+  url: string,
+  method: string,
+  body: unknown,
+): Promise<ApiClientResponse<T>> {
+  const retryHeaders: Record<string, string> = {};
+  if (body !== undefined) {
+    retryHeaders['Content-Type'] = 'application/json';
+  }
+  if (accessToken) {
+    retryHeaders['Authorization'] = `Bearer ${accessToken}`;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT);
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: retryHeaders,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+
+    return handleResponse<T>(response);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      error instanceof DOMException && error.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK_ERROR',
+      error instanceof Error ? error.message : 'Connection failed',
+      0,
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 /**
@@ -145,7 +186,11 @@ export async function apiClient<T>(config: ApiClientConfig): Promise<ApiClientRe
   // Build query string
   let fullUrl = `${BASE_URL}${url}`;
   if (params) {
-    const searchParams = new URLSearchParams(params);
+    const cleaned: Record<string, string> = {};
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined) cleaned[key] = String(value);
+    }
+    const searchParams = new URLSearchParams(cleaned);
     fullUrl += `?${searchParams.toString()}`;
   }
 
@@ -175,34 +220,19 @@ export async function apiClient<T>(config: ApiClientConfig): Promise<ApiClientRe
       const refreshed = await handleRefresh();
       if (refreshed) {
         // Retry original request with new token
-        const retryHeaders: Record<string, string> = {};
-        if (body !== undefined) {
-          retryHeaders['Content-Type'] = 'application/json';
-        }
-        if (accessToken) {
-          retryHeaders['Authorization'] = `Bearer ${accessToken}`;
-        }
-
-        const retryController = new AbortController();
-        const retryTimeoutId = setTimeout(() => retryController.abort(), TIMEOUT);
-
-        try {
-          const retryResponse = await fetch(fullUrl, {
-            method,
-            headers: retryHeaders,
-            body: body !== undefined ? JSON.stringify(body) : undefined,
-            signal: retryController.signal,
-          });
-
-          clearTimeout(retryTimeoutId);
-          return handleResponse<T>(retryResponse);
-        } finally {
-          clearTimeout(retryTimeoutId);
-        }
+        return await retryRequest<T>(fullUrl, method, body);
       }
     }
 
     return handleResponse<T>(response);
+  } catch (error) {
+    // Wrap non-ApiError (network, timeout) so consumers get a consistent shape
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      error instanceof DOMException && error.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK_ERROR',
+      error instanceof Error ? error.message : 'Connection failed',
+      0,
+    );
   } finally {
     clearTimeout(timeoutId);
   }

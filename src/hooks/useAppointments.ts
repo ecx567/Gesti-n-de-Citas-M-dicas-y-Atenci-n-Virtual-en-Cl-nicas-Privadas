@@ -17,6 +17,15 @@ import type { Appointment } from '@/types/appointment';
 // API → Domain mapping
 // ---------------------------------------------------------------------------
 
+/**
+ * Map API appointment to domain Appointment.
+ *
+ * NOTE: `date` and `time` are locale-formatted convenience strings
+ * (`toLocaleDateString`/`toLocaleTimeString` with `es-ES`).
+ * They live in the React Query cache — if locale requirements ever change,
+ * invalidate `appointmentKeys.all` to refresh them.
+ * Use `dateTime` (raw ISO 8601) for locale-independent access.
+ */
 function mapAppointment(api: AppointmentApi): Appointment {
   const dateObj = new Date(api.dateTime);
 
@@ -45,10 +54,14 @@ function mapAppointment(api: AppointmentApi): Appointment {
 // Query key factory
 // ---------------------------------------------------------------------------
 
+export interface AppointmentFilters {
+  status?: string;
+}
+
 export const appointmentKeys = {
   all: ['appointments'] as const,
-  list: (filters?: Record<string, unknown>) => ['appointments', 'list', filters] as const,
-  detail: (id: string) => ['appointments', 'detail', id] as const,
+  list: (filters?: AppointmentFilters) => ['appointments', filters] as const,
+  detail: (id: string) => ['appointments', id] as const,
 };
 
 // ---------------------------------------------------------------------------
@@ -58,9 +71,9 @@ export const appointmentKeys = {
 /**
  * Fetch a paginated, optionally filtered list of appointments.
  */
-export function useAppointments(filters?: {
-  status?: string;
-}): UseQueryResult<Appointment[], Error> {
+export function useAppointments(
+  filters?: AppointmentFilters,
+): UseQueryResult<Appointment[], Error> {
   return useQuery({
     queryKey: appointmentKeys.list(filters),
     queryFn: async () => {

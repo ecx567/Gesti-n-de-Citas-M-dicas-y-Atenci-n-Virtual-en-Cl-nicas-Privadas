@@ -1,7 +1,12 @@
 // src/api/appointments/endpoints.ts
 
 import { apiClient } from '@/api/client';
-import type { AppointmentApi, CreateAppointmentPayload, PaginatedResponse } from './types';
+import type {
+  ApiResponse,
+  AppointmentApi,
+  CreateAppointmentPayload,
+  PaginatedResponse,
+} from './types';
 
 /**
  * Fetch a paginated, optionally filtered list of appointments.
@@ -15,7 +20,7 @@ export function fetchAppointments(params?: {
     method: 'GET',
     url: '/appointments',
     authenticated: true,
-    params: params as Record<string, string> | undefined,
+    params,
   }).then((res) => res.data);
 }
 
@@ -23,23 +28,23 @@ export function fetchAppointments(params?: {
  * Fetch a single appointment by ID.
  */
 export function fetchAppointment(id: string): Promise<AppointmentApi> {
-  return apiClient<AppointmentApi>({
+  return apiClient<ApiResponse<AppointmentApi>>({
     method: 'GET',
     url: `/appointments/${id}`,
     authenticated: true,
-  }).then((res) => res.data);
+  }).then((res) => res.data.data);
 }
 
 /**
  * Create a new appointment.
  */
 export function createAppointment(payload: CreateAppointmentPayload): Promise<AppointmentApi> {
-  return apiClient<AppointmentApi>({
+  return apiClient<ApiResponse<AppointmentApi>>({
     method: 'POST',
     url: '/appointments',
     body: payload,
     authenticated: true,
-  }).then((res) => res.data);
+  }).then((res) => res.data.data);
 }
 
 /**
