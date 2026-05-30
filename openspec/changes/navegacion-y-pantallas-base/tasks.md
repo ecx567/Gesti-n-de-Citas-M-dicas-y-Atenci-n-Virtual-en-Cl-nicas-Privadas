@@ -55,9 +55,11 @@ _Depends on: Phase 3_
 ## Phase 6 — Profile Screen & Placeholders
 _Depends on: Phase 3_
 
-- [ ] Create `src/app/(patient)/profile.tsx`: Patient name/email/phone, menu items (Edit Profile, Settings, About), logout with confirmation dialog
-- [ ] Create placeholder screens: `edit-profile.tsx`, `settings.tsx`, `about.tsx` — each shows "Under construction"
-- [ ] Verify: info renders, menus navigate to placeholders, logout clears SecureStore → redirects to login
+- [x] Create `src/app/(app)/profile.tsx`: Patient name/email/phone, menu items (Edit Profile, Settings, About), logout with confirmation dialog
+- [x] Create placeholder screens: `edit-profile.tsx`, `settings.tsx`, `about.tsx` — each shows "Under construction"
+- [x] Verify: info renders, menus navigate to placeholders, logout clears SecureStore → redirects to login
+
+**Note**: Actual path es `src/app/(app)/profile.tsx` (dentro del grupo de tabs), no `(patient)/` como se especificó originalmente.
 
 ## Review Workload Forecast
 
