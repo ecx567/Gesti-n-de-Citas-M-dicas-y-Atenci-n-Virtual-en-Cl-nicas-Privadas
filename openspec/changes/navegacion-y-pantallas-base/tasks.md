@@ -16,39 +16,41 @@ _Depends on: Phase 0_
 - [x] Create `src/ctx.tsx`: AuthContext with SecureStore persistence, `login`/`register`/`logout`, session state `loading` | `authenticated` | `unauthenticated`
 - [x] Create `src/app/_layout.tsx`: Root `<Stack>` wrapping children in `<AuthProvider>`, loading splash while session resolves
 - [x] Create `src/app/index.tsx`: Loading/splash screen during session check
-- [ ] Verify: unauthenticated → loading → splash; authenticated → renders children (pending auth screens from PR 2)
+- [x] Verify: unauthenticated → loading → splash; authenticated → renders children
 
 ## Phase 2 — Auth Screens (Wireframes)
 _Depends on: Phase 1_
 
-- [ ] Create `src/app/(auth)/_layout.tsx`: Stack layout for auth group
-- [ ] Create `src/app/(auth)/login.tsx`: Email/password form, inline validation, mock submit → token in SecureStore
-- [ ] Create `src/app/(auth)/register.tsx`: Name/email/password/confirm form, validation, mock registration
-- [ ] Create `src/app/(auth)/forgot-password.tsx`: Email field, validation, confirmation message + back link
-- [ ] Verify: login navigates to `(app)`, register creates session, forgot-pwd shows confirmation
+- [x] Create `src/app/(auth)/_layout.tsx`: Stack layout for auth group
+- [x] Create `src/app/(auth)/login.tsx`: Email/password form, inline validation, mock submit → token in SecureStore
+- [x] Create `src/app/(auth)/register.tsx`: Name/email/password/confirm form, validation, mock registration
+- [x] Create `src/app/(auth)/forgot-password.tsx`: Email field, validation, confirmation message + back link
+- [x] Update `src/app/_layout.tsx`: Add auth guard redirect (unauthenticated → login)
+- [x] Verify: login navigates to `(app)`, register creates session, forgot-pwd shows confirmation
+  - Phase 3 now provides `(app)` group. After login/register, session → `authenticated` → layout redirects to `/(patient)/home`.
 
 ## Phase 3 — App Layout & Bottom Tabs
 _Depends on: Phase 1_
 
-- [ ] Create `src/app/(app)/_layout.tsx`: Bottom `<Tabs>` with Home, Appointments, Profile tabs + icons
-- [ ] Create `src/app/(app)/index.tsx`: Redirect to patient home
-- [ ] Enable `experiments.typedRoutes` in `app.json`
-- [ ] Verify: 3 tabs render, tapping switches screens, TypeScript validates routes
+- [x] Create `src/app/(app)/_layout.tsx`: Bottom `<Tabs>` with Home, Appointments, Profile tabs + icons
+- [x] Create `src/app/(app)/index.tsx`: Redirect to patient home
+- [x] Enable `experiments.typedRoutes` in `app.json` — already done in PR 1
+- [x] Verify: 3 tabs render, tapping switches screens, TypeScript validates routes
 
 ## Phase 4 — Patient Home
 _Depends on: Phase 3_
 
-- [ ] Create `src/app/(patient)/home.tsx`: Greeting w/ mock name, upcoming appointment card, "Book Appointment" + "View All" quick actions, empty state fallback
-- [ ] Verify: greeting renders, card displays mock data, quick actions navigate
+- [x] Create `src/app/(patient)/home.tsx`: Greeting w/ mock name, upcoming appointment card, "Book Appointment" + "View All" quick actions, empty state fallback
+- [x] Verify: greeting renders, card displays mock data, quick actions navigate
 
 ## Phase 5 — Appointment Screens
 _Depends on: Phase 3_
 
-- [ ] Create reusable `AppointmentCard` component: doctor name, date, time, badge (confirmed=green, cancelled=red, pending=yellow), pressable → detail
-- [ ] Create `src/app/appointments.tsx`: List filterable by upcoming/past/cancelled with mock data, empty states per filter
-- [ ] Create `src/app/appointment/[id].tsx`: Dynamic route rendering full detail from mock data, "not found" state for invalid IDs
-- [ ] Create booking flow: specialty → doctor → date → time → confirmation → navigate to detail screen
-- [ ] Verify: filters work, `[id]` resolves correctly, booking creates mock appointment
+- [x] Create reusable `AppointmentCard` component: doctor name, date, time, badge (confirmed=green, cancelled=red, pending=yellow), pressable → detail
+- [x] Create `src/app/appointments.tsx`: List filterable by upcoming/past/cancelled with mock data, empty states per filter
+- [x] Create `src/app/appointment/[id].tsx`: Dynamic route rendering full detail from mock data, "not found" state for invalid IDs
+- [x] Create booking flow: specialty → doctor → date → time → confirmation → navigate to detail screen
+- [x] Verify: filters work, `[id]` resolves correctly, booking creates mock appointment
 
 ## Phase 6 — Profile Screen & Placeholders
 _Depends on: Phase 3_
