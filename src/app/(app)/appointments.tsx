@@ -1,10 +1,9 @@
-import { useState, useMemo } from 'react';
-import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, Text, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AppointmentCard } from '@/components/AppointmentCard';
-import { getAppointments } from '@/types/appointment';
-import type { AppointmentStatus } from '@/types/appointment';
+import { useAppointments } from '@/hooks/useAppointments';
 
 // ---------------------------------------------------------------------------
 // Filter tabs
@@ -18,24 +17,6 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'cancelled', label: 'Canceladas' },
 ];
 
-function filterAppointments(key: FilterKey) {
-  const now = new Date();
-  const all = getAppointments();
-
-  switch (key) {
-    case 'upcoming':
-      return all.filter(
-        (a) => a.status !== 'cancelled' && new Date(a.dateTime) >= now,
-      );
-    case 'past':
-      return all.filter(
-        (a) => a.status !== 'cancelled' && new Date(a.dateTime) < now,
-      );
-    case 'cancelled':
-      return all.filter((a) => a.status === 'cancelled');
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -44,22 +25,15 @@ export default function AppointmentsScreen() {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterKey>('upcoming');
 
-  const appointments = useMemo(
-    () => filterAppointments(activeFilter),
-    [activeFilter],
-  );
-
-  const isEmpty = appointments.length === 0;
+  const { data: appointments, isLoading, error } = useAppointments({ status: activeFilter });
+  const isEmpty = !isLoading && !error && appointments?.length === 0;
 
   return (
     <View style={styles.screen}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Mis Citas</Text>
-        <Pressable
-          style={styles.addButton}
-          onPress={() => router.push('/book-appointment')}
-        >
+        <Pressable style={styles.addButton} onPress={() => router.push('/book-appointment')}>
           <Ionicons name="add" size={24} color="#FFFFFF" />
         </Pressable>
       </View>
@@ -74,12 +48,7 @@ export default function AppointmentsScreen() {
               style={[styles.filterTab, isActive && styles.filterTabActive]}
               onPress={() => setActiveFilter(f.key)}
             >
-              <Text
-                style={[
-                  styles.filterText,
-                  isActive && styles.filterTextActive,
-                ]}
-              >
+              <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
                 {f.label}
               </Text>
             </Pressable>
@@ -87,15 +56,23 @@ export default function AppointmentsScreen() {
         })}
       </View>
 
-      {/* List or empty state */}
-      {isEmpty ? (
+      {/* Loading state */}
+      {isLoading ? (
+        <View style={styles.loadingState}>
+          <ActivityIndicator size="large" color="#0891B2" />
+        </View>
+      ) : error ? (
+        /* Error state */
+        <View style={styles.errorState}>
+          <Ionicons name="alert-circle-outline" size={56} color="#EF4444" />
+          <Text style={styles.errorTitle}>Error al cargar citas</Text>
+          <Text style={styles.errorMessage}>{error.message}</Text>
+        </View>
+      ) : isEmpty ? (
+        /* Empty state */
         <View style={styles.emptyState}>
           <Ionicons
-            name={
-              activeFilter === 'cancelled'
-                ? 'checkmark-circle-outline'
-                : 'calendar-outline'
-            }
+            name={activeFilter === 'cancelled' ? 'checkmark-circle-outline' : 'calendar-outline'}
             size={56}
             color="#CBD5E1"
           />
@@ -107,15 +84,10 @@ export default function AppointmentsScreen() {
                 : 'No hay citas canceladas'}
           </Text>
           <Text style={styles.emptySubtitle}>
-            {activeFilter === 'upcoming'
-              ? 'Reservá una nueva cita para comenzar.'
-              : ''}
+            {activeFilter === 'upcoming' ? 'Reservá una nueva cita para comenzar.' : ''}
           </Text>
           {activeFilter === 'upcoming' && (
-            <Pressable
-              style={styles.emptyCta}
-              onPress={() => router.push('/book-appointment')}
-            >
+            <Pressable style={styles.emptyCta} onPress={() => router.push('/book-appointment')}>
               <Text style={styles.emptyCtaText}>Reservar Cita</Text>
             </Pressable>
           )}
@@ -218,5 +190,28 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 14,
+  },
+  loadingState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    gap: 8,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#EF4444',
+    textAlign: 'center',
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
   },
 });

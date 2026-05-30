@@ -78,6 +78,11 @@ export function isAuthenticated(): boolean {
   return accessToken !== null;
 }
 
+/** Read the current refresh token (for logout calls). */
+export function getRefreshToken(): string | null {
+  return refreshToken;
+}
+
 // ---------------------------------------------------------------------------
 // Refresh dedup
 // ---------------------------------------------------------------------------

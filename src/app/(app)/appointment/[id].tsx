@@ -1,7 +1,7 @@
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getAppointmentById } from '@/types/appointment';
+import { useAppointment } from '@/hooks/useAppointments';
 import type { ViewStyle } from 'react-native';
 
 // ---------------------------------------------------------------------------
@@ -97,7 +97,15 @@ export default function AppointmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
-  const appointment = typeof id === 'string' ? getAppointmentById(id) : undefined;
+  const { data: appointment, isLoading } = useAppointment(id ?? '');
+
+  if (isLoading) {
+    return (
+      <View style={notFoundStyles.container}>
+        <ActivityIndicator size="large" color="#0891B2" />
+      </View>
+    );
+  }
 
   if (!appointment) {
     return (
@@ -110,13 +118,8 @@ export default function AppointmentDetailScreen() {
         />
         <Ionicons name="search-outline" size={64} color="#CBD5E1" />
         <Text style={notFoundStyles.title}>Cita no encontrada</Text>
-        <Text style={notFoundStyles.subtitle}>
-          No encontramos una cita con el ID "{id}".
-        </Text>
-        <Pressable
-          style={notFoundStyles.button}
-          onPress={() => router.back()}
-        >
+        <Text style={notFoundStyles.subtitle}>No encontramos una cita con el ID "{id}".</Text>
+        <Pressable style={notFoundStyles.button} onPress={() => router.back()}>
           <Text style={notFoundStyles.buttonText}>Volver a Mis Citas</Text>
         </Pressable>
       </View>
@@ -137,9 +140,7 @@ export default function AppointmentDetailScreen() {
         {/* Status banner */}
         <View style={[styles.statusBanner, { backgroundColor: statusCfg.bg }]}>
           <Ionicons name={statusCfg.icon} size={24} color={statusCfg.color} />
-          <Text style={[styles.statusText, { color: statusCfg.color }]}>
-            {statusCfg.label}
-          </Text>
+          <Text style={[styles.statusText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
         </View>
 
         {/* Doctor info card */}
@@ -149,25 +150,15 @@ export default function AppointmentDetailScreen() {
           </View>
           <View>
             <Text style={styles.doctorName}>{appointment.doctorName}</Text>
-            <Text style={styles.doctorSpecialty}>
-              {appointment.specialty}
-            </Text>
+            <Text style={styles.doctorSpecialty}>{appointment.specialty}</Text>
           </View>
         </View>
 
         {/* Details */}
         <View style={styles.detailsCard}>
-          <DetailRow
-            icon="calendar-outline"
-            label="Fecha"
-            value={appointment.date}
-          />
+          <DetailRow icon="calendar-outline" label="Fecha" value={appointment.date} />
           <DetailRow icon="time-outline" label="Hora" value={appointment.time} />
-          <DetailRow
-            icon="location-outline"
-            label="Ubicación"
-            value={appointment.location}
-          />
+          <DetailRow icon="location-outline" label="Ubicación" value={appointment.location} />
         </View>
 
         {/* Notes */}
