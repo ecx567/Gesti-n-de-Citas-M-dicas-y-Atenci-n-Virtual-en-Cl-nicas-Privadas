@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { addAppointment } from '@/types/appointment';
+import { useCreateAppointment } from '@/hooks/useAppointments';
+import { ApiError } from '@/api/client';
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -29,35 +30,17 @@ const DOCTORS: Record<string, { name: string; id: string }[]> = {
     { name: 'Dra. Laura Sánchez', id: 'd5' },
     { name: 'Dr. Pedro Ramírez', id: 'd6' },
   ],
-  Dermatología: [
-    { name: 'Dra. Carmen Torres', id: 'd7' },
-  ],
-  Oftalmología: [
-    { name: 'Dr. Andrés Vega', id: 'd8' },
-  ],
+  Dermatología: [{ name: 'Dra. Carmen Torres', id: 'd7' }],
+  Oftalmología: [{ name: 'Dr. Andrés Vega', id: 'd8' }],
 };
 
-const TIME_SLOTS = [
-  '8:00 AM',
-  '9:00 AM',
-  '10:00 AM',
-  '11:00 AM',
-  '2:00 PM',
-  '3:00 PM',
-  '4:00 PM',
-];
+const TIME_SLOTS = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '2:00 PM', '3:00 PM', '4:00 PM'];
 
 // ---------------------------------------------------------------------------
 // Step indicator
 // ---------------------------------------------------------------------------
 
-function StepIndicator({
-  current,
-  total,
-}: {
-  current: number;
-  total: number;
-}) {
+function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
     <View style={stepStyles.row}>
       {Array.from({ length: total }, (_, i) => (
@@ -108,7 +91,8 @@ export default function BookAppointmentScreen() {
   const [doctor, setDoctor] = useState<string | null>(null);
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
-  const [confirmedId, setConfirmedId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const createMutation = useCreateAppointment();
 
   const canNext =
     (step === 0 && specialty) ||
@@ -130,56 +114,29 @@ export default function BookAppointmentScreen() {
     else router.back();
   };
 
-  const handleConfirm = () => {
-    const newId = `mock-${Date.now()}`;
-    addAppointment({
-      id: newId,
-      doctorName: doctor!,
-      specialty: specialty!,
-      date: date!,
-      dateTime: `${date!}T${time!}`,
-      time: time!,
-      status: 'confirmed',
-      location: 'Consultorio por asignar',
-      notes: 'Cita agendada desde la app.',
-    });
-    setConfirmedId(newId);
-  };
+  const handleConfirm = async () => {
+    setError(null);
+    const doctorId =
+      Object.values(DOCTORS)
+        .flat()
+        .find((d) => d.name === doctor)?.id ?? '';
 
-  // Confirmation screen
-  if (confirmedId) {
-    return (
-      <>
-        <Stack.Screen options={{ title: 'Cita Confirmada', headerBackButtonDisplayMode: 'minimal' }} />
-        <View style={styles.confirmContainer}>
-          <View style={styles.confirmIcon}>
-            <Ionicons name="checkmark-circle" size={72} color="#16A34A" />
-          </View>
-          <Text style={styles.confirmTitle}>¡Cita Confirmada!</Text>
-          <Text style={styles.confirmSubtitle}>
-            {doctor} - {specialty}
-          </Text>
-          <Text style={styles.confirmDetail}>
-            {date} a las {time}
-          </Text>
-          <Pressable
-            style={styles.confirmButton}
-            onPress={() => router.push(`/appointment/${confirmedId}`)}
-          >
-            <Text style={styles.confirmButtonText}>Ver Detalle</Text>
-          </Pressable>
-          <Pressable
-            style={styles.confirmSecondary}
-            onPress={() => router.push('/appointments')}
-          >
-            <Text style={styles.confirmSecondaryText}>
-              Volver a Mis Citas
-            </Text>
-          </Pressable>
-        </View>
-      </>
-    );
-  }
+    try {
+      const appointment = await createMutation.mutateAsync({
+        doctorId,
+        dateTime: new Date().toISOString(),
+        location: 'Consultorio por asignar',
+        notes: 'Cita agendada desde la app.',
+      });
+      router.push(`/appointment/${appointment.id}`);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError('Error al crear la cita. Intentá de nuevo.');
+      }
+    }
+  };
 
   const stepTitles = ['Especialidad', 'Doctor', 'Fecha', 'Horario'];
 
@@ -208,18 +165,10 @@ export default function BookAppointmentScreen() {
             {SPECIALTIES.map((s) => (
               <Pressable
                 key={s}
-                style={[
-                  styles.optionCard,
-                  specialty === s && styles.optionCardActive,
-                ]}
+                style={[styles.optionCard, specialty === s && styles.optionCardActive]}
                 onPress={() => setSpecialty(s)}
               >
-                <Text
-                  style={[
-                    styles.optionText,
-                    specialty === s && styles.optionTextActive,
-                  ]}
-                >
+                <Text style={[styles.optionText, specialty === s && styles.optionTextActive]}>
                   {s}
                 </Text>
               </Pressable>
@@ -233,29 +182,17 @@ export default function BookAppointmentScreen() {
             {DOCTORS[specialty]?.map((d) => (
               <Pressable
                 key={d.id}
-                style={[
-                  styles.optionRow,
-                  doctor === d.name && styles.optionRowActive,
-                ]}
+                style={[styles.optionRow, doctor === d.name && styles.optionRowActive]}
                 onPress={() => setDoctor(d.name)}
               >
                 <View style={styles.optionAvatar}>
                   <Ionicons name="person" size={20} color="#0891B2" />
                 </View>
-                <Text
-                  style={[
-                    styles.optionRowText,
-                    doctor === d.name && styles.optionTextActive,
-                  ]}
-                >
+                <Text style={[styles.optionRowText, doctor === d.name && styles.optionTextActive]}>
                   {d.name}
                 </Text>
                 {doctor === d.name && (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={22}
-                    color="#0891B2"
-                  />
+                  <Ionicons name="checkmark-circle" size={22} color="#0891B2" />
                 )}
               </Pressable>
             ))}
@@ -265,32 +202,25 @@ export default function BookAppointmentScreen() {
         {/* Step 2: Date */}
         {step === 2 && (
           <View style={styles.optionsGrid}>
-            {['Lunes, 9 de junio', 'Martes, 10 de junio', 'Miércoles, 11 de junio', 'Jueves, 12 de junio'].map(
-              (d) => (
-                <Pressable
-                  key={d}
-                  style={[
-                    styles.optionCard,
-                    date === d && styles.optionCardActive,
-                  ]}
-                  onPress={() => setDate(d)}
-                >
-                  <Ionicons
-                    name="calendar-outline"
-                    size={20}
-                    color={date === d ? '#FFFFFF' : '#64748B'}
-                  />
-                  <Text
-                    style={[
-                      styles.optionText,
-                      date === d && styles.optionTextActive,
-                    ]}
-                  >
-                    {d}
-                  </Text>
-                </Pressable>
-              ),
-            )}
+            {[
+              'Lunes, 9 de junio',
+              'Martes, 10 de junio',
+              'Miércoles, 11 de junio',
+              'Jueves, 12 de junio',
+            ].map((d) => (
+              <Pressable
+                key={d}
+                style={[styles.optionCard, date === d && styles.optionCardActive]}
+                onPress={() => setDate(d)}
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={20}
+                  color={date === d ? '#FFFFFF' : '#64748B'}
+                />
+                <Text style={[styles.optionText, date === d && styles.optionTextActive]}>{d}</Text>
+              </Pressable>
+            ))}
           </View>
         )}
 
@@ -300,10 +230,7 @@ export default function BookAppointmentScreen() {
             {TIME_SLOTS.map((t) => (
               <Pressable
                 key={t}
-                style={[
-                  styles.optionCard,
-                  time === t && styles.optionCardActive,
-                ]}
+                style={[styles.optionCard, time === t && styles.optionCardActive]}
                 onPress={() => setTime(t)}
               >
                 <Ionicons
@@ -311,16 +238,17 @@ export default function BookAppointmentScreen() {
                   size={20}
                   color={time === t ? '#FFFFFF' : '#64748B'}
                 />
-                <Text
-                  style={[
-                    styles.optionText,
-                    time === t && styles.optionTextActive,
-                  ]}
-                >
-                  {t}
-                </Text>
+                <Text style={[styles.optionText, time === t && styles.optionTextActive]}>{t}</Text>
               </Pressable>
             ))}
+          </View>
+        )}
+
+        {/* Error message */}
+        {error && (
+          <View style={styles.errorBox}>
+            <Ionicons name="alert-circle" size={18} color="#EF4444" />
+            <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
 
@@ -328,18 +256,17 @@ export default function BookAppointmentScreen() {
         <View style={styles.navRow}>
           <Pressable style={styles.backButton} onPress={handleBack}>
             <Ionicons name="arrow-back" size={20} color="#64748B" />
-            <Text style={styles.backText}>
-              {step === 0 ? 'Cancelar' : 'Atrás'}
-            </Text>
+            <Text style={styles.backText}>{step === 0 ? 'Cancelar' : 'Atrás'}</Text>
           </Pressable>
           <Pressable
-            style={[styles.nextButton, !canNext && styles.nextButtonDisabled]}
+            style={[
+              styles.nextButton,
+              (!canNext || createMutation.isPending) && styles.nextButtonDisabled,
+            ]}
             onPress={handleNext}
-            disabled={!canNext}
+            disabled={!canNext || createMutation.isPending}
           >
-            <Text style={styles.nextText}>
-              {step === 3 ? 'Confirmar' : 'Siguiente'}
-            </Text>
+            <Text style={styles.nextText}>{step === 3 ? 'Confirmar' : 'Siguiente'}</Text>
             <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
           </Pressable>
         </View>
@@ -431,6 +358,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#334155',
   },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FEF2F2',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#DC2626',
+  },
   navRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -464,50 +405,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
-  },
-  confirmContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    padding: 24,
-    gap: 12,
-  },
-  confirmIcon: {
-    marginBottom: 8,
-  },
-  confirmTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  confirmSubtitle: {
-    fontSize: 16,
-    color: '#334155',
-    textAlign: 'center',
-  },
-  confirmDetail: {
-    fontSize: 14,
-    color: '#64748B',
-    marginBottom: 16,
-  },
-  confirmButton: {
-    backgroundColor: '#0891B2',
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 12,
-  },
-  confirmButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 15,
-  },
-  confirmSecondary: {
-    paddingVertical: 10,
-  },
-  confirmSecondaryText: {
-    color: '#0891B2',
-    fontWeight: '500',
-    fontSize: 14,
   },
 });

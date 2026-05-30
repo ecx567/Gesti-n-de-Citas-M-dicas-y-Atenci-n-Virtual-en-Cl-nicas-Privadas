@@ -1,39 +1,29 @@
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  type ReactNode,
-} from 'react';
-import * as SecureStore from 'expo-secure-store';
-
-const TOKEN_KEY = 'auth-token';
-const MOCK_TOKEN = 'mock-token-vitacitas';
+  initializeTokens,
+  setTokens,
+  clearTokens,
+  isAuthenticated,
+  getRefreshToken,
+} from '@/api/client';
+import {
+  login as apiLogin,
+  register as apiRegister,
+  logout as apiLogout,
+} from '@/api/auth/endpoints';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type SessionState =
-  | 'loading'
-  | 'authenticated'
-  | 'unauthenticated';
+export type SessionState = 'loading' | 'authenticated' | 'unauthenticated';
 
 export interface AuthContextValue {
   /** Current session state */
   session: SessionState;
-  /**
-   * Authenticate with email/password.
-   * Currently mock — stores a static token in SecureStore.
-   * Will be wired to a real API in a future change.
-   */
+  /** Authenticate with email/password. */
   login: (email: string, password: string) => Promise<void>;
-  /**
-   * Create an account and start a session.
-   * Currently mock — stores a static token in SecureStore.
-   * Will be wired to a real API in a future change.
-   */
+  /** Create an account and start a session. */
   register: (name: string, email: string, password: string) => Promise<void>;
   /** Clear session and remove token from SecureStore */
   logout: () => Promise<void>;
@@ -52,33 +42,35 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<SessionState>('loading');
 
-  // On mount — check for existing token in SecureStore
+  // On mount — check for existing tokens in SecureStore
   useEffect(() => {
-    SecureStore.getItemAsync(TOKEN_KEY)
-      .then((token) => {
-        setSession(token ? 'authenticated' : 'unauthenticated');
-      })
-      .catch(() => {
-        // SecureStore not available (e.g. web) — treat as unauthenticated
-        setSession('unauthenticated');
-      });
+    initializeTokens().then(() => {
+      setSession(isAuthenticated() ? 'authenticated' : 'unauthenticated');
+    });
   }, []);
 
-  const login = useCallback(async (_email: string, _password: string) => {
-    await SecureStore.setItemAsync(TOKEN_KEY, MOCK_TOKEN);
+  const login = useCallback(async (email: string, password: string) => {
+    const response = await apiLogin({ email, password });
+    await setTokens(response.accessToken, response.refreshToken);
     setSession('authenticated');
   }, []);
 
-  const register = useCallback(
-    async (_name: string, _email: string, _password: string) => {
-      await SecureStore.setItemAsync(TOKEN_KEY, MOCK_TOKEN);
-      setSession('authenticated');
-    },
-    [],
-  );
+  const register = useCallback(async (name: string, email: string, password: string) => {
+    const response = await apiRegister({ name, email, password });
+    await setTokens(response.accessToken, response.refreshToken);
+    setSession('authenticated');
+  }, []);
 
   const logout = useCallback(async () => {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    const token = getRefreshToken();
+    if (token) {
+      try {
+        await apiLogout(token);
+      } catch {
+        // Even if the logout API call fails, clear local state
+      }
+    }
+    await clearTokens();
     setSession('unauthenticated');
   }, []);
 

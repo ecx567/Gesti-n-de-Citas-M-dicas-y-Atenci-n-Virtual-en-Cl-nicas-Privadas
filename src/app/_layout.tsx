@@ -1,7 +1,9 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { AuthProvider, useAuth } from '@/ctx';
+import { STALE_TIME, RETRY_COUNT } from '@/api/config';
 
 /**
  * Inner layout that reads auth state and conditionally renders.
@@ -55,10 +57,21 @@ function RootLayoutNav() {
  * Auth screens (login, register) and app screens (tabs, home) will be
  * added in subsequent PRs as child route groups.
  */
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: STALE_TIME,
+      retry: RETRY_COUNT,
+    },
+  },
+});
+
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
