@@ -48,6 +48,32 @@ The system MUST provide a multi-step booking flow that collects specialty, docto
 - THEN the system MUST return to the previous screen
 - AND MUST NOT create a mock appointment
 
+### Requirement: Appointment Cancellation
+
+The system MUST allow the user to cancel an appointment from the detail screen with a confirmation dialog, wired to the real `cancelAppointment(id)` API.
+
+#### Scenario: Cancel with confirmation calls API and updates status
+
+- GIVEN the user is on the appointment detail screen for a confirmed appointment
+- WHEN the user taps the cancel button and confirms the dialog
+- THEN the system MUST show a loading spinner
+- AND call `cancelAppointment(id)`
+- AND on success update the appointment status to "cancelled"
+
+#### Scenario: Dismiss confirmation cancels no-op
+
+- GIVEN the user taps the cancel button
+- WHEN the user dismisses or cancels the confirmation dialog
+- THEN the system MUST NOT call the API
+- AND the detail screen MUST remain unchanged
+
+#### Scenario: Cancel API error shows message
+
+- GIVEN the user confirms cancellation
+- WHEN the `cancelAppointment` API returns an error (already cancelled, network failure)
+- THEN the system MUST display an error message
+- AND the detail screen MUST remain unchanged
+
 ### Requirement: Dynamic Appointment Detail
 
 The system MUST render a detail screen at `appointment/[id].tsx` that displays full appointment information based on the route parameter.
@@ -61,10 +87,22 @@ The system MUST render a detail screen at `appointment/[id].tsx` that displays f
 
 #### Scenario: Unknown ID shows not-found state
 
-- GIVEN the user navigates to an appointment ID that does not exist in mock data
+- GIVEN the user navigates to an appointment ID that does not exist
 - WHEN the screen renders
 - THEN the system MUST display a "Appointment not found" message
 - AND provide a button to return to the appointments list
+
+#### Scenario: Cancel button visible for confirmed appointments
+
+- GIVEN the appointment status is "confirmed"
+- WHEN the detail screen renders
+- THEN a cancel button MUST be visible
+
+#### Scenario: Cancel button hidden for cancelled or completed
+
+- GIVEN the appointment status is "cancelled" or "completed"
+- WHEN the detail screen renders
+- THEN the cancel button MUST NOT be visible
 
 ### Requirement: Appointment Card Component
 
