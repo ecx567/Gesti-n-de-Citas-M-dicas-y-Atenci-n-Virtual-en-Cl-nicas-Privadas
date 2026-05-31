@@ -10,5 +10,6 @@ module.exports = {
   // we skip the expo winter polyfill entirely.
   moduleNameMapper: {
     '^expo/src/winter$': '<rootDir>/__mocks__/expo-winter.js',
+    '^@expo/vector-icons$': '<rootDir>/__mocks__/@expo/vector-icons.js',
   },
 };

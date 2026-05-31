@@ -14,13 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/ctx';
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const MOCK_EMAIL = 'test@vitacitas.com';
-const MOCK_PASSWORD = 'Test123!';
-
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ---------------------------------------------------------------------------
@@ -76,13 +69,6 @@ export default function LoginScreen() {
 
     setIsSubmitting(true);
     setErrors({});
-
-    // Mock credential check — reject anything that doesn't match
-    if (email.trim() !== MOCK_EMAIL || password !== MOCK_PASSWORD) {
-      setErrors({ general: 'Credenciales inválidas. Intenta de nuevo.' });
-      setIsSubmitting(false);
-      return;
-    }
 
     try {
       await login(email.trim(), password);

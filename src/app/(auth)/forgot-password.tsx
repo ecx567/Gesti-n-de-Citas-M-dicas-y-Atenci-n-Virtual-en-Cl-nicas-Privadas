@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { forgotPassword } from '@/api/auth/endpoints';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -25,6 +26,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface FormErrors {
   email?: string;
+  general?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -64,12 +66,16 @@ export default function ForgotPasswordScreen() {
     if (!validate()) return;
 
     setIsSubmitting(true);
+    setErrors({});
 
-    // Mock API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+    try {
+      await forgotPassword(email.trim());
+      setIsSubmitted(true);
+    } catch {
+      setErrors({ general: 'Ocurrió un error al enviar el correo. Intenta de nuevo.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   // -----------------------------------------------------------------------
@@ -130,6 +136,13 @@ export default function ForgotPasswordScreen() {
               para restablecer tu contraseña.
             </Text>
           </View>
+
+          {/* General error */}
+          {errors.general ? (
+            <View style={styles.generalError}>
+              <Text style={styles.generalErrorText}>{errors.general}</Text>
+            </View>
+          ) : null}
 
           {/* Email */}
           <View style={styles.field}>
@@ -262,6 +275,21 @@ const styles = StyleSheet.create({
   confirmEmail: {
     fontWeight: '600',
     color: '#0891B2',
+  },
+
+  // General error
+  generalError: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  generalErrorText: {
+    color: '#DC2626',
+    fontSize: 14,
+    textAlign: 'center',
   },
 
   // Field

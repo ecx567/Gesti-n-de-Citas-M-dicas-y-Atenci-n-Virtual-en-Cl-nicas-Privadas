@@ -59,13 +59,8 @@ function MenuRow({ icon, label, path, action, danger }: MenuItem) {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { session, logout } = useAuth();
+  const { user, logout } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
-
-  // Extract patient name from session (mock)
-  const patientName = 'Erick Correa';
-  const patientEmail = session?.email ?? 'erick@vitacitas.com';
-  const patientPhone = '+593 99 999 9999';
 
   const handleLogout = () => {
     Alert.alert(
@@ -121,9 +116,9 @@ export default function ProfileScreen() {
         <View style={styles.avatar}>
           <Ionicons name="person" size={40} color="#FFFFFF" />
         </View>
-        <Text style={styles.name}>{patientName}</Text>
-        <Text style={styles.email}>{patientEmail}</Text>
-        <Text style={styles.phone}>{patientPhone}</Text>
+        <Text style={styles.name}>{user?.name ?? ''}</Text>
+        <Text style={styles.email}>{user?.email ?? ''}</Text>
+        {user?.role ? <Text style={styles.roleBadge}>{user.role}</Text> : null}
       </View>
 
       {/* Menu sections */}
@@ -179,9 +174,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
   },
-  phone: {
-    fontSize: 14,
-    color: '#64748B',
+  roleBadge: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0891B2',
+    backgroundColor: '#ECFEFF',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+    overflow: 'hidden',
+    textTransform: 'capitalize',
   },
   menuSection: {
     backgroundColor: '#FFFFFF',

@@ -1,33 +1,9 @@
-import { useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-// ---------------------------------------------------------------------------
-// Mock data
-// ---------------------------------------------------------------------------
-
-const MOCK_PATIENT_NAME = 'Erick';
-
-interface MockAppointment {
-  id: string;
-  doctorName: string;
-  specialty: string;
-  date: string;
-  time: string;
-  status: 'confirmed' | 'pending' | 'cancelled';
-}
-
-const MOCK_APPOINTMENTS: MockAppointment[] = [
-  {
-    id: '1',
-    doctorName: 'Dra. María García',
-    specialty: 'Medicina General',
-    date: 'Lunes, 2 de junio',
-    time: '10:30 AM',
-    status: 'confirmed',
-  },
-];
+import { useAuth } from '@/ctx';
+import { useAppointments } from '@/hooks/useAppointments';
+import type { Appointment } from '@/types/appointment';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -39,7 +15,7 @@ const STATUS_CONFIG = {
   cancelled: { label: 'Cancelada', color: '#DC2626', bg: '#FEF2F2' },
 } as const;
 
-function StatusBadge({ status }: { status: MockAppointment['status'] }) {
+function StatusBadge({ status }: { status: Appointment['status'] }) {
   const config = STATUS_CONFIG[status];
   return (
     <View style={[styles.badge, { backgroundColor: config.bg }]}>
@@ -76,7 +52,7 @@ function EmptyState({ onBook }: { onBook: () => void }) {
 function AppointmentCard({
   appointment,
 }: {
-  appointment: MockAppointment;
+  appointment: Appointment;
 }) {
   return (
     <View style={styles.card}>
@@ -111,32 +87,57 @@ function AppointmentCard({
 // Home screen
 // ---------------------------------------------------------------------------
 
-/**
- * Patient home screen — greeting, upcoming appointment, quick actions.
- * Static wireframe with mock data. No real API integration.
- */
 export default function PatientHomeScreen() {
   const router = useRouter();
-  const [appointments] = useState(MOCK_APPOINTMENTS);
+  const { user } = useAuth();
+  const { data: appointments, isLoading, error } = useAppointments();
 
-  const upcoming = appointments.filter((a) => a.status !== 'cancelled')[0] ?? null;
+  const upcoming = appointments?.filter((a) => a.status !== 'cancelled')[0] ?? null;
 
   const handleBookAppointment = () => {
-    // TODO: Navigate to booking flow (PR 4)
-    // eslint-disable-next-line no-console
-    console.log('Navigating to booking flow…');
+    router.push('/book-appointment');
   };
 
   const handleViewAll = () => {
     router.push('/appointments');
   };
 
+  if (isLoading) {
+    return (
+      <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.greetingSection}>
+          <Text style={styles.greeting}>
+            {`¡Hola, ${user?.name ?? ''}!`}
+          </Text>
+        </View>
+        <ActivityIndicator size="large" color="#0891B2" style={styles.loader} />
+      </ScrollView>
+    );
+  }
+
+  if (error) {
+    return (
+      <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.greetingSection}>
+          <Text style={styles.greeting}>
+            {`¡Hola, ${user?.name ?? ''}!`}
+          </Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <Ionicons name="cloud-offline-outline" size={48} color="#CBD5E1" />
+          <Text style={styles.errorText}>No se pudieron cargar las citas.</Text>
+          <Text style={styles.errorSubtext}>Deslizá hacia abajo para reintentar.</Text>
+        </View>
+      </ScrollView>
+    );
+  }
+
   if (!upcoming) {
     return (
       <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
         <View style={styles.greetingSection}>
           <Text style={styles.greeting}>
-            {`¡Hola, ${MOCK_PATIENT_NAME}!`}
+            {`¡Hola, ${user?.name ?? ''}!`}
           </Text>
         </View>
         <EmptyState onBook={handleBookAppointment} />
@@ -149,7 +150,7 @@ export default function PatientHomeScreen() {
       {/* Greeting */}
       <View style={styles.greetingSection}>
         <Text style={styles.greeting}>
-          {`¡Hola, ${MOCK_PATIENT_NAME}!`}
+          {`¡Hola, ${user?.name ?? ''}!`}
         </Text>
         <Text style={styles.greetingSub}>Bienvenido a VitaCitas</Text>
       </View>
@@ -158,7 +159,9 @@ export default function PatientHomeScreen() {
       <Text style={styles.sectionTitle}>Próxima Cita</Text>
 
       {/* Appointment card */}
-      <AppointmentCard appointment={upcoming} />
+      <Pressable onPress={() => router.push(`/appointment/${upcoming.id}`)}>
+        <AppointmentCard appointment={upcoming} />
+      </Pressable>
 
       {/* Quick actions */}
       <View style={styles.quickActions}>
@@ -289,6 +292,29 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontWeight: '600',
+  },
+
+  // Loader
+  loader: {
+    marginTop: 40,
+  },
+
+  // Error
+  errorContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    gap: 12,
+  },
+  errorText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  errorSubtext: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
   },
 
   // Quick actions

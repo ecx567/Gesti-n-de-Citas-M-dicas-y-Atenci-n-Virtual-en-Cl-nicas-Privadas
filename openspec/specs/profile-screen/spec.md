@@ -2,26 +2,32 @@
 
 ## Purpose
 
-Defines the patient profile screen displaying personal information with navigation placeholders for edit profile, settings, about, and logout actions. Wireframe with mock data, no API integration.
+Defines the patient profile screen displaying the authenticated user's personal information (name, email, role) from auth context, with navigation for settings, about, and logout.
 
 ## Requirements
 
 ### Requirement: Patient Info Display
 
-The system MUST display the patient's name, email, and phone number from mock data on the profile screen.
+The system MUST display `user.name`, `user.email`, and `user.role` badge from the auth context on the profile screen. Phone number is not displayed (not available in the current `AuthResponse.user` type).
 
-#### Scenario: Profile info renders on load
+#### Scenario: Profile info renders real user data
 
-- GIVEN the user is authenticated and on the profile screen
-- WHEN the screen renders
-- THEN the system MUST show the patient's full name, email address, and phone number
+- GIVEN the user is authenticated and `user` is set in auth context
+- WHEN the profile screen renders
+- THEN the system MUST show the user's full name, email address, and role badge
 
-#### Scenario: Partial mock data renders gracefully
+#### Scenario: Missing optional fields render gracefully
 
-- GIVEN the mock patient data is missing a phone number
+- GIVEN the user object has some optional fields missing
 - WHEN the profile screen renders
 - THEN the system MUST display the available fields
-- AND MUST show a placeholder or omit the missing field without crashing
+- AND MUST NOT crash or display raw `null`/`undefined` values
+
+#### Scenario: Null user is guarded by auth layout
+
+- GIVEN the user context is null (unauthenticated)
+- WHEN the profile screen attempts to render
+- THEN the system MUST prevent access via the auth layout guard (redirect or block)
 
 ### Requirement: Navigation Placeholders
 

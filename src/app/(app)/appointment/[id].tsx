@@ -1,7 +1,8 @@
-import { View, Text, ScrollView, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppointment } from '@/hooks/useAppointments';
+import { useAppointment, useCancelAppointment } from '@/hooks/useAppointments';
 import type { ViewStyle } from 'react-native';
 
 // ---------------------------------------------------------------------------
@@ -98,6 +99,27 @@ export default function AppointmentDetailScreen() {
   const router = useRouter();
 
   const { data: appointment, isLoading } = useAppointment(id ?? '');
+  const cancelMutation = useCancelAppointment();
+  const [cancelState, setCancelState] = useState<'idle' | 'cancelling' | 'error'>('idle');
+
+  function handleCancel() {
+    Alert.alert('Cancelar Cita', '¿Estás seguro de que querés cancelar esta cita?', [
+      { text: 'No', style: 'cancel' },
+      {
+        text: 'Sí, Cancelar',
+        style: 'destructive',
+        onPress: async () => {
+          setCancelState('cancelling');
+          try {
+            await cancelMutation.mutateAsync(id!);
+            setCancelState('idle');
+          } catch {
+            setCancelState('error');
+          }
+        },
+      },
+    ]);
+  }
 
   if (isLoading) {
     return (
@@ -166,6 +188,36 @@ export default function AppointmentDetailScreen() {
           <View style={styles.notesCard}>
             <Text style={styles.notesTitle}>Notas</Text>
             <Text style={styles.notesText}>{appointment.notes}</Text>
+          </View>
+        ) : null}
+
+        {/* Cancel button — only for confirmed appointments */}
+        {appointment.status === 'confirmed' ? (
+          <View style={styles.cancelSection}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.cancelButton,
+                pressed && styles.cancelButtonPressed,
+                cancelState === 'cancelling' && styles.cancelButtonDisabled,
+              ]}
+              onPress={handleCancel}
+              disabled={cancelState === 'cancelling'}
+            >
+              {cancelState === 'cancelling' ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="close-circle-outline" size={20} color="#FFFFFF" />
+                  <Text style={styles.cancelButtonText}>Cancelar Cita</Text>
+                </>
+              )}
+            </Pressable>
+
+            {cancelState === 'error' ? (
+              <Text style={styles.cancelErrorText}>
+                Ocurrió un error al cancelar la cita. Intenta de nuevo.
+              </Text>
+            ) : null}
           </View>
         ) : null}
       </ScrollView>
@@ -260,6 +312,38 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#334155',
     lineHeight: 22,
+  },
+
+  // Cancel section
+  cancelSection: {
+    marginTop: 8,
+    gap: 8,
+  },
+  cancelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#DC2626',
+    paddingVertical: 16,
+    borderRadius: 14,
+    minHeight: 52,
+  },
+  cancelButtonPressed: {
+    opacity: 0.85,
+  },
+  cancelButtonDisabled: {
+    opacity: 0.6,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  cancelErrorText: {
+    color: '#DC2626',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
 
