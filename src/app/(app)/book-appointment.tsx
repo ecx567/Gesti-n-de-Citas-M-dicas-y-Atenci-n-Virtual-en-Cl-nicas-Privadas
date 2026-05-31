@@ -1,40 +1,74 @@
-import { useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { useState, useMemo } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCreateAppointment } from '@/hooks/useAppointments';
+import { useSpecialties, useDoctors } from '@/hooks/useDoctors';
 import { ApiError } from '@/api/client';
 
 // ---------------------------------------------------------------------------
-// Mock data
+// Date/time helpers
 // ---------------------------------------------------------------------------
 
-const SPECIALTIES = [
-  'Medicina General',
-  'Cardiología',
-  'Pediatría',
-  'Dermatología',
-  'Oftalmología',
-];
+interface DayOption {
+  label: string;
+  value: string; // YYYY-MM-DD
+}
 
-const DOCTORS: Record<string, { name: string; id: string }[]> = {
-  'Medicina General': [
-    { name: 'Dra. María García', id: 'd1' },
-    { name: 'Dr. Juan Pérez', id: 'd2' },
-  ],
-  Cardiología: [
-    { name: 'Dr. Carlos López', id: 'd3' },
-    { name: 'Dra. Ana Martínez', id: 'd4' },
-  ],
-  Pediatría: [
-    { name: 'Dra. Laura Sánchez', id: 'd5' },
-    { name: 'Dr. Pedro Ramírez', id: 'd6' },
-  ],
-  Dermatología: [{ name: 'Dra. Carmen Torres', id: 'd7' }],
-  Oftalmología: [{ name: 'Dr. Andrés Vega', id: 'd8' }],
-};
+interface TimeSlot {
+  label: string;
+  value: string; // HH:mm
+}
 
-const TIME_SLOTS = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '2:00 PM', '3:00 PM', '4:00 PM'];
+/** Generate the next N days starting from tomorrow, skipping weekends. */
+function getNextDays(count: number): DayOption[] {
+  const days: DayOption[] = [];
+  const today = new Date();
+  let added = 0;
+
+  for (let i = 1; added < count; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+
+    // Skip weekends
+    const dow = date.getDay();
+    if (dow === 0 || dow === 6) continue;
+
+    days.push({
+      label: date.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      }),
+      value: date.toISOString().split('T')[0],
+    });
+    added++;
+  }
+
+  return days;
+}
+
+/** Generate 1-hour time slots from 08:00 to 17:00, skipping 12:00-13:00 (lunch). */
+function getTimeSlots(): TimeSlot[] {
+  const slots: TimeSlot[] = [];
+  for (let h = 8; h <= 17; h++) {
+    if (h >= 12 && h < 14) continue; // lunch break
+    const hour = h.toString().padStart(2, '0');
+    const displayHour = h > 12 ? h - 12 : h;
+    slots.push({
+      label: `${displayHour}:00 ${h < 12 ? 'AM' : 'PM'}`,
+      value: `${hour}:00`,
+    });
+  }
+  return slots;
+}
 
 // ---------------------------------------------------------------------------
 // Step indicator
@@ -88,17 +122,25 @@ export default function BookAppointmentScreen() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [specialty, setSpecialty] = useState<string | null>(null);
-  const [doctor, setDoctor] = useState<string | null>(null);
-  const [date, setDate] = useState<string | null>(null);
-  const [time, setTime] = useState<string | null>(null);
+  const [doctorId, setDoctorId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null); // YYYY-MM-DD
+  const [selectedTime, setSelectedTime] = useState<string | null>(null); // HH:mm
   const [error, setError] = useState<string | null>(null);
   const createMutation = useCreateAppointment();
 
+  // Real API data
+  const specialtiesQuery = useSpecialties();
+  const doctorsQuery = useDoctors(specialty ?? undefined);
+
+  // Generated date/time options
+  const dayOptions = useMemo(() => getNextDays(14), []);
+  const timeSlots = useMemo(() => getTimeSlots(), []);
+
   const canNext =
     (step === 0 && specialty) ||
-    (step === 1 && doctor) ||
-    (step === 2 && date) ||
-    (step === 3 && time);
+    (step === 1 && doctorId) ||
+    (step === 2 && selectedDate) ||
+    (step === 3 && selectedTime);
 
   const handleNext = () => {
     if (!canNext) return;
@@ -115,16 +157,18 @@ export default function BookAppointmentScreen() {
   };
 
   const handleConfirm = async () => {
+    if (!doctorId || !selectedDate || !selectedTime) return;
     setError(null);
-    const doctorId =
-      Object.values(DOCTORS)
-        .flat()
-        .find((d) => d.name === doctor)?.id ?? '';
 
     try {
+      // Build a proper ISO date from selected date + time
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const [hour, minute] = selectedTime.split(':').map(Number);
+      const dateObj = new Date(year, month - 1, day, hour, minute);
+
       const appointment = await createMutation.mutateAsync({
         doctorId,
-        dateTime: new Date().toISOString(),
+        dateTime: dateObj.toISOString(),
         location: 'Consultorio por asignar',
         notes: 'Cita agendada desde la app.',
       });
@@ -162,11 +206,22 @@ export default function BookAppointmentScreen() {
         {/* Step 0: Specialty */}
         {step === 0 && (
           <View style={styles.optionsGrid}>
-            {SPECIALTIES.map((s) => (
+            {specialtiesQuery.isLoading && (
+              <ActivityIndicator size="large" color="#0891B2" style={styles.loader} />
+            )}
+            {specialtiesQuery.isError && (
+              <Text style={styles.errorText}>
+                Error al cargar especialidades. Verificá que el servidor esté corriendo.
+              </Text>
+            )}
+            {specialtiesQuery.data?.map((s) => (
               <Pressable
                 key={s}
                 style={[styles.optionCard, specialty === s && styles.optionCardActive]}
-                onPress={() => setSpecialty(s)}
+                onPress={() => {
+                  setSpecialty(s);
+                  setDoctorId(null);
+                }}
               >
                 <Text style={[styles.optionText, specialty === s && styles.optionTextActive]}>
                   {s}
@@ -179,19 +234,22 @@ export default function BookAppointmentScreen() {
         {/* Step 1: Doctor */}
         {step === 1 && specialty && (
           <View style={styles.optionsList}>
-            {DOCTORS[specialty]?.map((d) => (
+            {doctorsQuery.isLoading && (
+              <ActivityIndicator size="large" color="#0891B2" style={styles.loader} />
+            )}
+            {doctorsQuery.data?.map((d) => (
               <Pressable
                 key={d.id}
-                style={[styles.optionRow, doctor === d.name && styles.optionRowActive]}
-                onPress={() => setDoctor(d.name)}
+                style={[styles.optionRow, doctorId === d.id && styles.optionRowActive]}
+                onPress={() => setDoctorId(d.id)}
               >
                 <View style={styles.optionAvatar}>
                   <Ionicons name="person" size={20} color="#0891B2" />
                 </View>
-                <Text style={[styles.optionRowText, doctor === d.name && styles.optionTextActive]}>
+                <Text style={[styles.optionRowText, doctorId === d.id && styles.optionTextActive]}>
                   {d.name}
                 </Text>
-                {doctor === d.name && (
+                {doctorId === d.id && (
                   <Ionicons name="checkmark-circle" size={22} color="#0891B2" />
                 )}
               </Pressable>
@@ -202,23 +260,25 @@ export default function BookAppointmentScreen() {
         {/* Step 2: Date */}
         {step === 2 && (
           <View style={styles.optionsGrid}>
-            {[
-              'Lunes, 9 de junio',
-              'Martes, 10 de junio',
-              'Miércoles, 11 de junio',
-              'Jueves, 12 de junio',
-            ].map((d) => (
+            {dayOptions.map((d) => (
               <Pressable
-                key={d}
-                style={[styles.optionCard, date === d && styles.optionCardActive]}
-                onPress={() => setDate(d)}
+                key={d.value}
+                style={[styles.optionCard, selectedDate === d.value && styles.optionCardActive]}
+                onPress={() => setSelectedDate(d.value)}
               >
                 <Ionicons
                   name="calendar-outline"
                   size={20}
-                  color={date === d ? '#FFFFFF' : '#64748B'}
+                  color={selectedDate === d.value ? '#FFFFFF' : '#64748B'}
                 />
-                <Text style={[styles.optionText, date === d && styles.optionTextActive]}>{d}</Text>
+                <Text
+                  style={[
+                    styles.optionText,
+                    selectedDate === d.value && styles.optionTextActive,
+                  ]}
+                >
+                  {d.label}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -227,18 +287,25 @@ export default function BookAppointmentScreen() {
         {/* Step 3: Time */}
         {step === 3 && (
           <View style={styles.optionsGrid}>
-            {TIME_SLOTS.map((t) => (
+            {timeSlots.map((t) => (
               <Pressable
-                key={t}
-                style={[styles.optionCard, time === t && styles.optionCardActive]}
-                onPress={() => setTime(t)}
+                key={t.value}
+                style={[styles.optionCard, selectedTime === t.value && styles.optionCardActive]}
+                onPress={() => setSelectedTime(t.value)}
               >
                 <Ionicons
                   name="time-outline"
                   size={20}
-                  color={time === t ? '#FFFFFF' : '#64748B'}
+                  color={selectedTime === t.value ? '#FFFFFF' : '#64748B'}
                 />
-                <Text style={[styles.optionText, time === t && styles.optionTextActive]}>{t}</Text>
+                <Text
+                  style={[
+                    styles.optionText,
+                    selectedTime === t.value && styles.optionTextActive,
+                  ]}
+                >
+                  {t.label}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -405,5 +472,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  loader: {
+    alignSelf: 'center',
+    paddingVertical: 40,
   },
 });

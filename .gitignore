@@ -42,3 +42,10 @@ yarn-error.*
 
 # SDD local registry (user-local paths)
 .atl/
+
+# Backend
+backend/node_modules/
+backend/.env
+backend/data/
+backend/*.log
+backend/*.log.err
