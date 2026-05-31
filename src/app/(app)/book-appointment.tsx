@@ -5,6 +5,7 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  Platform,
   StyleSheet,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
@@ -193,149 +194,147 @@ export default function BookAppointmentScreen() {
         }}
       />
       <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-        <StepIndicator current={step} total={4} />
+        <View style={styles.stepContent}>
+          <StepIndicator current={step} total={4} />
 
-        <Text style={styles.stepTitle}>{stepTitles[step]}</Text>
-        <Text style={styles.stepSubtitle}>
-          {step === 0 && 'Seleccioná una especialidad médica'}
-          {step === 1 && 'Elegí el doctor de tu preferencia'}
-          {step === 2 && 'Seleccioná la fecha para tu cita'}
-          {step === 3 && 'Elegí el horario disponible'}
-        </Text>
+          <Text style={styles.stepTitle}>{stepTitles[step]}</Text>
+          <Text style={styles.stepSubtitle}>
+            {step === 0 && 'Seleccioná una especialidad médica'}
+            {step === 1 && 'Elegí el doctor de tu preferencia'}
+            {step === 2 && 'Seleccioná la fecha para tu cita'}
+            {step === 3 && 'Elegí el horario disponible'}
+          </Text>
 
-        {/* Step 0: Specialty */}
-        {step === 0 && (
-          <View style={styles.optionsGrid}>
-            {specialtiesQuery.isLoading && (
-              <ActivityIndicator size="large" color="#0891B2" style={styles.loader} />
-            )}
-            {specialtiesQuery.isError && (
-              <Text style={styles.errorText}>
-                Error al cargar especialidades. Verificá que el servidor esté corriendo.
-              </Text>
-            )}
-            {specialtiesQuery.data?.map((s) => (
-              <Pressable
-                key={s}
-                style={[styles.optionCard, specialty === s && styles.optionCardActive]}
-                onPress={() => {
-                  setSpecialty(s);
-                  setDoctorId(null);
-                }}
-              >
-                <Text style={[styles.optionText, specialty === s && styles.optionTextActive]}>
-                  {s}
+          {/* Step 0: Specialty */}
+          {step === 0 && (
+            <View style={styles.optionsGrid}>
+              {specialtiesQuery.isLoading && (
+                <ActivityIndicator size="large" color="#0891B2" style={styles.loader} />
+              )}
+              {specialtiesQuery.isError && (
+                <Text style={styles.errorText}>
+                  Error al cargar especialidades. Verificá que el servidor esté corriendo.
                 </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
-
-        {/* Step 1: Doctor */}
-        {step === 1 && specialty && (
-          <View style={styles.optionsList}>
-            {doctorsQuery.isLoading && (
-              <ActivityIndicator size="large" color="#0891B2" style={styles.loader} />
-            )}
-            {doctorsQuery.data?.map((d) => (
-              <Pressable
-                key={d.id}
-                style={[styles.optionRow, doctorId === d.id && styles.optionRowActive]}
-                onPress={() => setDoctorId(d.id)}
-              >
-                <View style={styles.optionAvatar}>
-                  <Ionicons name="person" size={20} color="#0891B2" />
-                </View>
-                <Text style={[styles.optionRowText, doctorId === d.id && styles.optionTextActive]}>
-                  {d.name}
-                </Text>
-                {doctorId === d.id && (
-                  <Ionicons name="checkmark-circle" size={22} color="#0891B2" />
-                )}
-              </Pressable>
-            ))}
-          </View>
-        )}
-
-        {/* Step 2: Date */}
-        {step === 2 && (
-          <View style={styles.optionsGrid}>
-            {dayOptions.map((d) => (
-              <Pressable
-                key={d.value}
-                style={[styles.optionCard, selectedDate === d.value && styles.optionCardActive]}
-                onPress={() => setSelectedDate(d.value)}
-              >
-                <Ionicons
-                  name="calendar-outline"
-                  size={20}
-                  color={selectedDate === d.value ? '#FFFFFF' : '#64748B'}
-                />
-                <Text
-                  style={[
-                    styles.optionText,
-                    selectedDate === d.value && styles.optionTextActive,
-                  ]}
+              )}
+              {specialtiesQuery.data?.map((s) => (
+                <Pressable
+                  key={s}
+                  style={[styles.optionCard, specialty === s && styles.optionCardActive]}
+                  onPress={() => {
+                    setSpecialty(s);
+                    setDoctorId(null);
+                  }}
                 >
-                  {d.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
+                  <Text style={[styles.optionText, specialty === s && styles.optionTextActive]}>
+                    {s}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
 
-        {/* Step 3: Time */}
-        {step === 3 && (
-          <View style={styles.optionsGrid}>
-            {timeSlots.map((t) => (
-              <Pressable
-                key={t.value}
-                style={[styles.optionCard, selectedTime === t.value && styles.optionCardActive]}
-                onPress={() => setSelectedTime(t.value)}
-              >
-                <Ionicons
-                  name="time-outline"
-                  size={20}
-                  color={selectedTime === t.value ? '#FFFFFF' : '#64748B'}
-                />
-                <Text
-                  style={[
-                    styles.optionText,
-                    selectedTime === t.value && styles.optionTextActive,
-                  ]}
+          {/* Step 1: Doctor */}
+          {step === 1 && specialty && (
+            <View style={styles.optionsList}>
+              {doctorsQuery.isLoading && (
+                <ActivityIndicator size="large" color="#0891B2" style={styles.loader} />
+              )}
+              {doctorsQuery.data?.map((d) => (
+                <Pressable
+                  key={d.id}
+                  style={[styles.optionRow, doctorId === d.id && styles.optionRowActive]}
+                  onPress={() => setDoctorId(d.id)}
                 >
-                  {t.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
+                  <View style={styles.optionAvatar}>
+                    <Ionicons name="person" size={20} color="#0891B2" />
+                  </View>
+                  <Text
+                    style={[styles.optionRowText, doctorId === d.id && styles.optionTextActive]}
+                  >
+                    {d.name}
+                  </Text>
+                  {doctorId === d.id && (
+                    <Ionicons name="checkmark-circle" size={22} color="#0891B2" />
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          )}
 
-        {/* Error message */}
-        {error && (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={18} color="#EF4444" />
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
+          {/* Step 2: Date */}
+          {step === 2 && (
+            <View style={styles.optionsGrid}>
+              {dayOptions.map((d) => (
+                <Pressable
+                  key={d.value}
+                  style={[styles.optionCard, selectedDate === d.value && styles.optionCardActive]}
+                  onPress={() => setSelectedDate(d.value)}
+                >
+                  <Ionicons
+                    name="calendar-outline"
+                    size={20}
+                    color={selectedDate === d.value ? '#FFFFFF' : '#64748B'}
+                  />
+                  <Text
+                    style={[styles.optionText, selectedDate === d.value && styles.optionTextActive]}
+                  >
+                    {d.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
 
-        {/* Navigation buttons */}
-        <View style={styles.navRow}>
-          <Pressable style={styles.backButton} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={20} color="#64748B" />
-            <Text style={styles.backText}>{step === 0 ? 'Cancelar' : 'Atrás'}</Text>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.nextButton,
-              (!canNext || createMutation.isPending) && styles.nextButtonDisabled,
-            ]}
-            onPress={handleNext}
-            disabled={!canNext || createMutation.isPending}
-          >
-            <Text style={styles.nextText}>{step === 3 ? 'Confirmar' : 'Siguiente'}</Text>
-            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-          </Pressable>
+          {/* Step 3: Time */}
+          {step === 3 && (
+            <View style={styles.optionsGrid}>
+              {timeSlots.map((t) => (
+                <Pressable
+                  key={t.value}
+                  style={[styles.optionCard, selectedTime === t.value && styles.optionCardActive]}
+                  onPress={() => setSelectedTime(t.value)}
+                >
+                  <Ionicons
+                    name="time-outline"
+                    size={20}
+                    color={selectedTime === t.value ? '#FFFFFF' : '#64748B'}
+                  />
+                  <Text
+                    style={[styles.optionText, selectedTime === t.value && styles.optionTextActive]}
+                  >
+                    {t.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+
+          {/* Error message */}
+          {error && (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle" size={18} color="#EF4444" />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          {/* Navigation buttons */}
+          <View style={styles.navRow}>
+            <Pressable style={styles.backButton} onPress={handleBack}>
+              <Ionicons name="arrow-back" size={20} color="#64748B" />
+              <Text style={styles.backText}>{step === 0 ? 'Cancelar' : 'Atrás'}</Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.nextButton,
+                (!canNext || createMutation.isPending) && styles.nextButtonDisabled,
+              ]}
+              onPress={handleNext}
+              disabled={!canNext || createMutation.isPending}
+            >
+              <Text style={styles.nextText}>{step === 3 ? 'Confirmar' : 'Siguiente'}</Text>
+              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+            </Pressable>
+          </View>
         </View>
       </ScrollView>
     </>
@@ -476,5 +475,10 @@ const styles = StyleSheet.create({
   loader: {
     alignSelf: 'center',
     paddingVertical: 40,
+  },
+  stepContent: {
+    position: 'relative',
+    zIndex: 1,
+    ...Platform.select({ web: { pointerEvents: 'auto' as const } }),
   },
 });

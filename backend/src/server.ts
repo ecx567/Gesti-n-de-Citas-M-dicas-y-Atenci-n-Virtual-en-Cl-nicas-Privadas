@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
 import appointmentRoutes from './routes/appointments.js';
-import doctorRoutes from './routes/doctors.js';
+import doctorRoutes, { specialtyRouter } from './routes/doctors.js';
 import userRoutes from './routes/users.js';
 
 const app = express();
@@ -22,7 +22,7 @@ app.use(express.json());
 
 app.use('/auth', authRoutes);
 app.use('/appointments', appointmentRoutes);
-app.use('/specialties', doctorRoutes);
+app.use('/specialties', specialtyRouter);
 app.use('/doctors', doctorRoutes);
 app.use('/users', userRoutes);
 

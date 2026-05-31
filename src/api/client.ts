@@ -39,7 +39,9 @@ export async function setTokens(access: string, refresh: string): Promise<void> 
     await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, access);
     await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refresh);
   } catch {
-    // SecureStore not available (e.g. web) — in-memory only is fine
+    // SecureStore not available (e.g. web) — fall back to localStorage
+    localStorage.setItem(ACCESS_TOKEN_KEY, access);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
   }
 }
 
@@ -52,7 +54,9 @@ export async function clearTokens(): Promise<void> {
     await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
   } catch {
-    // SecureStore not available (e.g. web)
+    // SecureStore not available (e.g. web) — fall back to localStorage
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
   }
 }
 
@@ -69,7 +73,14 @@ export async function initializeTokens(): Promise<void> {
       refreshToken = refresh;
     }
   } catch {
-    // SecureStore not available (e.g. web)
+    // SecureStore not available (e.g. web) — fall back to localStorage
+    const access = localStorage.getItem(ACCESS_TOKEN_KEY);
+    const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+    if (access && refresh) {
+      accessToken = access;
+      refreshToken = refresh;
+    }
   }
 }
 

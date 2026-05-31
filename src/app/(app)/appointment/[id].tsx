@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import ConfirmModal from '@/components/ConfirmModal';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppointment, useCancelAppointment } from '@/hooks/useAppointments';
@@ -102,24 +103,21 @@ export default function AppointmentDetailScreen() {
   const { data: appointment, isLoading } = useAppointment(id ?? '');
   const cancelMutation = useCancelAppointment();
   const [cancelState, setCancelState] = useState<'idle' | 'cancelling' | 'error'>('idle');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   function handleCancel() {
-    Alert.alert('Cancelar Cita', '¿Estás seguro de que querés cancelar esta cita?', [
-      { text: 'No', style: 'cancel' },
-      {
-        text: 'Sí, Cancelar',
-        style: 'destructive',
-        onPress: async () => {
-          setCancelState('cancelling');
-          try {
-            await cancelMutation.mutateAsync(id!);
-            setCancelState('idle');
-          } catch {
-            setCancelState('error');
-          }
-        },
-      },
-    ]);
+    setShowConfirmModal(true);
+  }
+
+  async function handleConfirmCancel() {
+    setShowConfirmModal(false);
+    setCancelState('cancelling');
+    try {
+      await cancelMutation.mutateAsync(id!);
+      setCancelState('idle');
+    } catch {
+      setCancelState('error');
+    }
   }
 
   if (isLoading) {
@@ -221,6 +219,17 @@ export default function AppointmentDetailScreen() {
             ) : null}
           </View>
         ) : null}
+
+        <ConfirmModal
+          visible={showConfirmModal}
+          title="Cancelar Cita"
+          message="¿Estás seguro de que querés cancelar esta cita?"
+          confirmLabel="Sí, Cancelar"
+          cancelLabel="No"
+          destructive
+          onConfirm={handleConfirmCancel}
+          onCancel={() => setShowConfirmModal(false)}
+        />
       </ScrollView>
     </>
   );

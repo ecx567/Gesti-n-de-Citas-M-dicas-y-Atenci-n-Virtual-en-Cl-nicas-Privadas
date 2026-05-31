@@ -3,12 +3,13 @@ import db from '../db/index.js';
 import type { DoctorInfo } from '../types/index.js';
 
 const router = Router();
+const specialtyRouter = Router();
 
 // ---------------------------------------------------------------------------
 // GET /specialties — list all available medical specialties
 // ---------------------------------------------------------------------------
 
-router.get('/specialties', (_req, res) => {
+specialtyRouter.get('/', (_req, res) => {
   try {
     const rows = db.prepare(`
       SELECT DISTINCT specialty FROM users
@@ -62,3 +63,4 @@ router.get('/', (req, res) => {
 });
 
 export default router;
+export { specialtyRouter };

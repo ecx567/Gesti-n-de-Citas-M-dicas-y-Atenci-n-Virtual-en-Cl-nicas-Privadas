@@ -4,7 +4,6 @@
 
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 import type { ReactNode } from 'react';
 import type { AppointmentApi } from '@/api/appointments/types';
 import { ApiError } from '@/api/client';
@@ -157,7 +156,7 @@ describe('AppointmentDetailScreen', () => {
     expect(screen.queryByText('Cancelar Cita')).toBeNull();
   });
 
-  test('opens confirmation alert on cancel press', async () => {
+  test('opens confirmation modal on cancel press', async () => {
     mockedEndpoints.fetchAppointment.mockResolvedValueOnce(makeAppointmentApi({ status: 'confirmed' }));
 
     const AppointmentDetailScreen = require('@/app/(app)/appointment/[id]').default;
@@ -167,16 +166,14 @@ describe('AppointmentDetailScreen', () => {
       expect(screen.getByText('Cancelar Cita')).toBeTruthy();
     });
 
-    const alertSpy = jest.spyOn(Alert, 'alert');
     fireEvent.press(screen.getByText('Cancelar Cita'));
 
-    expect(alertSpy).toHaveBeenCalledWith(
-      'Cancelar Cita',
-      '¿Estás seguro de que querés cancelar esta cita?',
-      expect.any(Array),
-    );
-
-    alertSpy.mockRestore();
+    // ConfirmModal should be visible with title, message and buttons
+    await waitFor(() => {
+      expect(screen.getByText('¿Estás seguro de que querés cancelar esta cita?')).toBeTruthy();
+    });
+    expect(screen.getByText('Sí, Cancelar')).toBeTruthy();
+    expect(screen.getByText('No')).toBeTruthy();
   });
 
   test('shows error text when cancel fails', async () => {
@@ -190,25 +187,16 @@ describe('AppointmentDetailScreen', () => {
       expect(screen.getByText('Cancelar Cita')).toBeTruthy();
     });
 
-    const alertSpy = jest.spyOn(Alert, 'alert');
     fireEvent.press(screen.getByText('Cancelar Cita'));
 
-    // Simulate pressing confirm
-    const buttons = alertSpy.mock.calls[0][2] as Array<{
-      text: string;
-      style?: string;
-      onPress?: () => void | Promise<void>;
-    }>;
-    const confirmButton = buttons.find((b) => b.style === 'destructive')!;
-    await confirmButton.onPress!();
+    // Press confirm in modal
+    fireEvent.press(screen.getByText('Sí, Cancelar'));
 
     await waitFor(() => {
       expect(
         screen.getByText('Ocurrió un error al cancelar la cita. Intenta de nuevo.'),
       ).toBeTruthy();
     });
-
-    alertSpy.mockRestore();
   });
 
   test('cancel button shows spinner while cancelling', async () => {
@@ -223,26 +211,15 @@ describe('AppointmentDetailScreen', () => {
       expect(screen.getByText('Cancelar Cita')).toBeTruthy();
     });
 
-    const alertSpy = jest.spyOn(Alert, 'alert');
     fireEvent.press(screen.getByText('Cancelar Cita'));
 
-    const buttons = alertSpy.mock.calls[0][2] as Array<{
-      text: string;
-      style?: string;
-      onPress?: () => void | Promise<void>;
-    }>;
-    const confirmButton = buttons.find((b) => b.style === 'destructive')!;
-    // Fire-and-forget — the promise never resolves (unresolved cancelAppointment)
-    // so we cannot await it. The synchronous setCancelState('cancelling') runs
-    // before the await, so React flushes the state update immediately.
-    confirmButton.onPress!();
+    // Press confirm in modal — setCancelState runs before awaiting the unresolved promise
+    fireEvent.press(screen.getByText('Sí, Cancelar'));
     await act(async () => {});
 
     // Cancel text should disappear, replaced by ActivityIndicator
     await waitFor(() => {
       expect(screen.queryByText('Cancelar Cita')).toBeNull();
     });
-
-    alertSpy.mockRestore();
   });
 });

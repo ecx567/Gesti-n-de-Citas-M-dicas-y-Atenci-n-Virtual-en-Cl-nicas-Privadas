@@ -1,25 +1,35 @@
 import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
+import { Redirect } from 'expo-router';
 import { useAuth } from '@/ctx';
 
 /**
- * Root index screen — shown while the auth context resolves the session.
- * Displays a branded splash / loading state.
+ * Root index screen.
+ *
+ * - loading   → branded splash
+ * - unauthenticated → let the auth guard in _layout.tsx handle redirect to login
+ * - authenticated   → redirect to patient home
+ *
+ * MUST handle all three states explicitly because root index.tsx
+ * shadows (app)/index.tsx — returning null would leave a blank screen.
  */
 export default function SplashScreen() {
   const { session } = useAuth();
 
-  if (session !== 'loading') {
-    // Session resolved — the layout will handle routing to auth or app.
-    // This screen stays mounted briefly until a redirect triggers.
-    return null;
+  if (session === 'loading') {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0891B2" />
+        <Text style={styles.text}>VitaCitas</Text>
+      </View>
+    );
   }
 
-  return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#0891B2" />
-      <Text style={styles.text}>VitaCitas</Text>
-    </View>
-  );
+  if (session === 'authenticated') {
+    return <Redirect href="/(app)/(patient)/home" />;
+  }
+
+  // unauthenticated — return null to let the auth guard redirect to login
+  return null;
 }
 
 const styles = StyleSheet.create({
