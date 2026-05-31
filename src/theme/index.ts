@@ -59,10 +59,7 @@ export const borderRadius = {
 
 export const shadows = {
   card: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
     elevation: 3,
   },
 } as const;

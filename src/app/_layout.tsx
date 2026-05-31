@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import { AuthProvider, useAuth } from '@/ctx';
 import { STALE_TIME, RETRY_COUNT } from '@/api/config';
 
@@ -46,7 +46,13 @@ function RootLayoutNav() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
+        ...Platform.select({
+          web: {
+            animation: 'none' as const,
+            unmountOnBlur: true,
+          },
+          default: { animation: 'slide_from_right' as const },
+        }),
       }}
     />
   );

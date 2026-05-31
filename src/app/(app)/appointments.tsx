@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Pressable, ActivityIndicator, Platform, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AppointmentCard } from '@/components/AppointmentCard';
@@ -112,6 +112,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+    position: 'relative',
+    zIndex: 1,
+    ...Platform.select({ web: { pointerEvents: 'auto' as const } }),
   },
   header: {
     flexDirection: 'row',
