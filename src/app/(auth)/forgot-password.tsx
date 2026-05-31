@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { forgotPassword } from '@/api/auth/endpoints';
+import { colors, spacing, fontSize, fontWeight, borderRadius } from '@/theme';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -157,7 +158,7 @@ export default function ForgotPasswordScreen() {
                 }
               }}
               placeholder="ej: usuario@correo.com"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -182,7 +183,7 @@ export default function ForgotPasswordScreen() {
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
+              <ActivityIndicator color={colors.white} size="small" />
             ) : (
               <Text style={styles.buttonText}>Enviar Instrucciones</Text>
             )}
@@ -209,32 +210,32 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   flex: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: spacing.xxl,
+    paddingTop: spacing.xxl,
     paddingBottom: 40,
   },
 
   // Header
   header: {
-    marginBottom: 32,
+    marginBottom: spacing.xxxl,
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 8,
+    fontSize: fontSize.hero,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 15,
-    color: '#64748B',
+    fontSize: fontSize.lg,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -243,94 +244,94 @@ const styles = StyleSheet.create({
   confirmation: {
     alignItems: 'center',
     paddingTop: 48,
-    paddingBottom: 32,
+    paddingBottom: spacing.xxxl,
   },
   iconCircle: {
     width: 64,
     height: 64,
-    borderRadius: 32,
-    backgroundColor: '#D1FAE5',
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.successBg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: spacing.xl,
   },
   iconText: {
-    fontSize: 28,
-    color: '#059669',
-    fontWeight: '700',
+    fontSize: fontSize.hero,
+    color: colors.success,
+    fontWeight: fontWeight.bold,
   },
   confirmTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 12,
+    fontSize: fontSize.title,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+    marginBottom: spacing.md,
   },
   confirmText: {
-    fontSize: 15,
-    color: '#64748B',
+    fontSize: fontSize.lg,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.lg,
   },
   confirmEmail: {
-    fontWeight: '600',
-    color: '#0891B2',
+    fontWeight: fontWeight.semibold,
+    color: colors.primary,
   },
 
   // General error
   generalError: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: colors.errorBg,
     borderWidth: 1,
-    borderColor: '#FECACA',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
+    borderColor: colors.errorBorder,
+    borderRadius: borderRadius.sm,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
   },
   generalErrorText: {
-    color: '#DC2626',
-    fontSize: 14,
+    color: colors.error,
+    fontSize: fontSize.md,
     textAlign: 'center',
   },
 
   // Field
   field: {
-    marginBottom: 20,
+    marginBottom: spacing.xl,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#0F172A',
-    marginBottom: 6,
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.medium,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
-    paddingHorizontal: 16,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.lg,
     paddingVertical: 14,
-    fontSize: 16,
-    color: '#0F172A',
-    backgroundColor: '#F8FAFC',
+    fontSize: fontSize.xl,
+    color: colors.text,
+    backgroundColor: colors.background,
   },
   inputError: {
-    borderColor: '#DC2626',
-    backgroundColor: '#FEF2F2',
+    borderColor: colors.error,
+    backgroundColor: colors.errorBg,
   },
   errorText: {
-    color: '#DC2626',
-    fontSize: 13,
-    marginTop: 4,
+    color: colors.error,
+    fontSize: fontSize.sm,
+    marginTop: spacing.xs,
     marginLeft: 2,
   },
 
   // Button
   button: {
-    backgroundColor: '#0891B2',
-    borderRadius: 10,
-    paddingVertical: 16,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: spacing.sm,
     minHeight: 52,
   },
   buttonPressed: {
@@ -340,22 +341,22 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    color: colors.white,
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.semibold,
   },
 
   // Links
   links: {
-    marginTop: 32,
+    marginTop: spacing.xxxl,
     alignItems: 'center',
   },
   link: {
-    fontSize: 14,
-    color: '#64748B',
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
   },
   linkBold: {
-    color: '#0891B2',
-    fontWeight: '600',
+    color: colors.primary,
+    fontWeight: fontWeight.semibold,
   },
 });

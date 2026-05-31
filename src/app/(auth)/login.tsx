@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/ctx';
+import { colors, spacing, fontSize, fontWeight, borderRadius } from '@/theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -120,7 +121,7 @@ export default function LoginScreen() {
                 if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
               }}
               placeholder="ej: usuario@correo.com"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -144,7 +145,7 @@ export default function LoginScreen() {
                 if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
               }}
               placeholder="Ingresa tu contraseña"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.textMuted}
               secureTextEntry
               autoCapitalize="none"
               autoComplete="password"
@@ -168,7 +169,7 @@ export default function LoginScreen() {
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
+              <ActivityIndicator color={colors.white} size="small" />
             ) : (
               <Text style={styles.buttonText}>Iniciar Sesión</Text>
             )}
@@ -199,90 +200,90 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   flex: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: spacing.xxl,
+    paddingTop: spacing.xxl,
     paddingBottom: 40,
   },
 
   // Header
   header: {
-    marginBottom: 32,
+    marginBottom: spacing.xxxl,
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#0891B2',
-    marginBottom: 8,
+    fontSize: fontSize.hero,
+    fontWeight: fontWeight.bold,
+    color: colors.primary,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 15,
-    color: '#64748B',
+    fontSize: fontSize.lg,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
 
   // General error
   generalError: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: colors.errorBg,
     borderWidth: 1,
-    borderColor: '#FECACA',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
+    borderColor: colors.errorBorder,
+    borderRadius: borderRadius.sm,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
   },
   generalErrorText: {
-    color: '#DC2626',
-    fontSize: 14,
+    color: colors.error,
+    fontSize: fontSize.md,
     textAlign: 'center',
   },
 
   // Field
   field: {
-    marginBottom: 20,
+    marginBottom: spacing.xl,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#0F172A',
-    marginBottom: 6,
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.medium,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
-    paddingHorizontal: 16,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.lg,
     paddingVertical: 14,
-    fontSize: 16,
-    color: '#0F172A',
-    backgroundColor: '#F8FAFC',
+    fontSize: fontSize.xl,
+    color: colors.text,
+    backgroundColor: colors.background,
   },
   inputError: {
-    borderColor: '#DC2626',
-    backgroundColor: '#FEF2F2',
+    borderColor: colors.error,
+    backgroundColor: colors.errorBg,
   },
   errorText: {
-    color: '#DC2626',
-    fontSize: 13,
-    marginTop: 4,
+    color: colors.error,
+    fontSize: fontSize.sm,
+    marginTop: spacing.xs,
     marginLeft: 2,
   },
 
   // Button
   button: {
-    backgroundColor: '#0891B2',
-    borderRadius: 10,
-    paddingVertical: 16,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: spacing.sm,
     minHeight: 52,
   },
   buttonPressed: {
@@ -292,23 +293,23 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    color: colors.white,
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.semibold,
   },
 
   // Links
   links: {
-    marginTop: 32,
-    gap: 16,
+    marginTop: spacing.xxxl,
+    gap: spacing.lg,
     alignItems: 'center',
   },
   link: {
-    fontSize: 14,
-    color: '#64748B',
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
   },
   linkBold: {
-    color: '#0891B2',
-    fontWeight: '600',
+    color: colors.primary,
+    fontWeight: fontWeight.semibold,
   },
 });

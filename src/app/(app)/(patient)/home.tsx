@@ -4,15 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/ctx';
 import { useAppointments } from '@/hooks/useAppointments';
 import type { Appointment } from '@/types/appointment';
+import { colors, spacing, fontSize, fontWeight, borderRadius, shadows } from '@/theme';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 const STATUS_CONFIG = {
-  confirmed: { label: 'Confirmada', color: '#16A34A', bg: '#F0FDF4' },
-  pending: { label: 'Pendiente', color: '#D97706', bg: '#FFFBEB' },
-  cancelled: { label: 'Cancelada', color: '#DC2626', bg: '#FEF2F2' },
+  confirmed: { label: 'Confirmada', color: colors.success, bg: colors.successBg },
+  pending: { label: 'Pendiente', color: colors.warning, bg: colors.warningBg },
+  cancelled: { label: 'Cancelada', color: colors.error, bg: colors.errorBg },
 } as const;
 
 function StatusBadge({ status }: { status: Appointment['status'] }) {
@@ -33,7 +34,7 @@ function StatusBadge({ status }: { status: Appointment['status'] }) {
 function EmptyState({ onBook }: { onBook: () => void }) {
   return (
     <View style={styles.emptyContainer}>
-      <Ionicons name="calendar-outline" size={64} color="#CBD5E1" />
+      <Ionicons name="calendar-outline" size={64} color={colors.disabled} />
       <Text style={styles.emptyTitle}>Sin citas próximas</Text>
       <Text style={styles.emptySubtitle}>
         No tienes citas agendadas. {String.fromCodePoint(0x1f44d)}
@@ -58,7 +59,7 @@ function AppointmentCard({
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.cardIcon}>
-          <Ionicons name="medkit-outline" size={24} color="#0891B2" />
+          <Ionicons name="medkit-outline" size={24} color={colors.primary} />
         </View>
         <View style={styles.cardHeaderText}>
           <Text style={styles.cardDoctor}>{appointment.doctorName}</Text>
@@ -71,11 +72,11 @@ function AppointmentCard({
 
       <View style={styles.cardDetails}>
         <View style={styles.cardDetailRow}>
-          <Ionicons name="calendar-outline" size={18} color="#64748B" />
+          <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} />
           <Text style={styles.cardDetailText}>{appointment.date}</Text>
         </View>
         <View style={styles.cardDetailRow}>
-          <Ionicons name="time-outline" size={18} color="#64748B" />
+          <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
           <Text style={styles.cardDetailText}>{appointment.time}</Text>
         </View>
       </View>
@@ -110,7 +111,7 @@ export default function PatientHomeScreen() {
             {`¡Hola, ${user?.name ?? ''}!`}
           </Text>
         </View>
-        <ActivityIndicator size="large" color="#0891B2" style={styles.loader} />
+        <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       </ScrollView>
     );
   }
@@ -124,7 +125,7 @@ export default function PatientHomeScreen() {
           </Text>
         </View>
         <View style={styles.errorContainer}>
-          <Ionicons name="cloud-offline-outline" size={48} color="#CBD5E1" />
+          <Ionicons name="cloud-offline-outline" size={48} color={colors.disabled} />
           <Text style={styles.errorText}>No se pudieron cargar las citas.</Text>
           <Text style={styles.errorSubtext}>Deslizá hacia abajo para reintentar.</Text>
         </View>
@@ -172,7 +173,7 @@ export default function PatientHomeScreen() {
           ]}
           onPress={handleBookAppointment}
         >
-          <Ionicons name="add-circle-outline" size={22} color="#FFFFFF" />
+          <Ionicons name="add-circle-outline" size={22} color={colors.white} />
           <Text style={styles.quickActionPrimaryText}>Reservar Cita</Text>
         </Pressable>
 
@@ -183,7 +184,7 @@ export default function PatientHomeScreen() {
           ]}
           onPress={handleViewAll}
         >
-          <Ionicons name="list-outline" size={22} color="#0891B2" />
+          <Ionicons name="list-outline" size={22} color={colors.primary} />
           <Text style={styles.quickActionSecondaryText}>Ver Todas</Text>
         </Pressable>
       </View>
@@ -198,12 +199,12 @@ export default function PatientHomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   scrollContent: {
-    padding: 20,
+    padding: spacing.xl,
     paddingTop: 60,
-    gap: 20,
+    gap: spacing.xl,
   },
 
   // Greeting
@@ -211,45 +212,41 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   greeting: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontSize: fontSize.hero,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
   },
   greetingSub: {
-    fontSize: 15,
-    color: '#64748B',
+    fontSize: fontSize.lg,
+    color: colors.textSecondary,
   },
 
   // Section
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
     marginBottom: -4,
   },
 
   // Card
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-    gap: 16,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xxl,
+    padding: spacing.xl,
+    ...shadows.card,
+    gap: spacing.lg,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
   },
   cardIcon: {
     width: 44,
     height: 44,
-    borderRadius: 12,
-    backgroundColor: '#ECFEFF',
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -258,17 +255,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   cardDoctor: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
   },
   cardSpecialty: {
-    fontSize: 13,
-    color: '#64748B',
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
   },
   cardDivider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.border,
   },
   cardDetails: {
     gap: 10,
@@ -279,19 +276,19 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   cardDetailText: {
-    fontSize: 14,
-    color: '#334155',
+    fontSize: fontSize.md,
+    color: colors.text,
   },
 
   // Badge
   badge: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
   },
   badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
   },
 
   // Loader
@@ -303,89 +300,89 @@ const styles = StyleSheet.create({
   errorContainer: {
     alignItems: 'center',
     paddingVertical: 40,
-    gap: 12,
+    gap: spacing.md,
   },
   errorText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
     textAlign: 'center',
   },
   errorSubtext: {
-    fontSize: 14,
-    color: '#64748B',
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
 
   // Quick actions
   quickActions: {
-    gap: 12,
+    gap: spacing.md,
     marginTop: 4,
   },
   quickActionPrimary: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#0891B2',
-    paddingVertical: 16,
-    borderRadius: 14,
+    gap: spacing.sm,
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.xl,
   },
   quickActionPressed: {
     opacity: 0.8,
   },
   quickActionPrimaryText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.semibold,
+    color: colors.white,
   },
   quickActionSecondary: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 16,
-    borderRadius: 14,
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
   },
   quickActionSecondaryPressed: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   quickActionSecondaryText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0891B2',
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.semibold,
+    color: colors.primary,
   },
 
   // Empty state
   emptyContainer: {
     alignItems: 'center',
     paddingVertical: 40,
-    gap: 12,
+    gap: spacing.md,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontSize: fontSize.xxxl,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
   },
   emptySubtitle: {
-    fontSize: 14,
-    color: '#64748B',
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },
   emptyCta: {
-    marginTop: 12,
-    backgroundColor: '#0891B2',
-    paddingHorizontal: 32,
+    marginTop: spacing.md,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xxxl,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: borderRadius.xl,
   },
   emptyCtaText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.semibold,
+    color: colors.white,
   },
 });

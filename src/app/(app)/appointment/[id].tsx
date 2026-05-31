@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppointment, useCancelAppointment } from '@/hooks/useAppointments';
 import type { ViewStyle } from 'react-native';
+import { colors, spacing, fontSize, fontWeight, borderRadius, shadows } from '@/theme';
 
 // ---------------------------------------------------------------------------
 // Status config
@@ -12,20 +13,20 @@ import type { ViewStyle } from 'react-native';
 const STATUS_CONFIG = {
   confirmed: {
     label: 'Confirmada',
-    color: '#16A34A',
-    bg: '#F0FDF4',
+    color: colors.success,
+    bg: colors.successBg,
     icon: 'checkmark-circle' as const,
   },
   pending: {
     label: 'Pendiente',
-    color: '#D97706',
-    bg: '#FFFBEB',
+    color: colors.warning,
+    bg: colors.warningBg,
     icon: 'time-outline' as const,
   },
   cancelled: {
     label: 'Cancelada',
-    color: '#DC2626',
-    bg: '#FEF2F2',
+    color: colors.error,
+    bg: colors.errorBg,
     icon: 'close-circle' as const,
   },
 } as const;
@@ -46,7 +47,7 @@ function DetailRow({
   return (
     <View style={detailStyles.row}>
       <View style={detailStyles.iconBox as ViewStyle}>
-        <Ionicons name={icon} size={20} color="#0891B2" />
+        <Ionicons name={icon} size={20} color={colors.primary} />
       </View>
       <View style={detailStyles.textCol}>
         <Text style={detailStyles.label}>{label}</Text>
@@ -60,16 +61,16 @@ const detailStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: colors.border,
   },
   iconBox: {
     width: 40,
     height: 40,
-    borderRadius: 10,
-    backgroundColor: '#ECFEFF',
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -78,15 +79,15 @@ const detailStyles = StyleSheet.create({
     gap: 2,
   },
   label: {
-    fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '500',
+    fontSize: fontSize.xs,
+    color: colors.textMuted,
+    fontWeight: fontWeight.medium,
     textTransform: 'uppercase',
   },
   value: {
-    fontSize: 15,
-    color: '#0F172A',
-    fontWeight: '500',
+    fontSize: fontSize.lg,
+    color: colors.text,
+    fontWeight: fontWeight.medium,
   },
 });
 
@@ -124,7 +125,7 @@ export default function AppointmentDetailScreen() {
   if (isLoading) {
     return (
       <View style={notFoundStyles.container}>
-        <ActivityIndicator size="large" color="#0891B2" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -138,7 +139,7 @@ export default function AppointmentDetailScreen() {
             headerBackTitle: 'Volver',
           }}
         />
-        <Ionicons name="search-outline" size={64} color="#CBD5E1" />
+        <Ionicons name="search-outline" size={64} color={colors.disabled} />
         <Text style={notFoundStyles.title}>Cita no encontrada</Text>
         <Text style={notFoundStyles.subtitle}>No encontramos una cita con el ID "{id}".</Text>
         <Pressable style={notFoundStyles.button} onPress={() => router.back()}>
@@ -168,7 +169,7 @@ export default function AppointmentDetailScreen() {
         {/* Doctor info card */}
         <View style={styles.doctorCard}>
           <View style={styles.doctorAvatar}>
-            <Ionicons name="person" size={32} color="#0891B2" />
+            <Ionicons name="person" size={32} color={colors.primary} />
           </View>
           <View>
             <Text style={styles.doctorName}>{appointment.doctorName}</Text>
@@ -204,10 +205,10 @@ export default function AppointmentDetailScreen() {
               disabled={cancelState === 'cancelling'}
             >
               {cancelState === 'cancelling' ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
+                <ActivityIndicator color={colors.white} size="small" />
               ) : (
                 <>
-                  <Ionicons name="close-circle-outline" size={20} color="#FFFFFF" />
+                  <Ionicons name="close-circle-outline" size={20} color={colors.white} />
                   <Text style={styles.cancelButtonText}>Cancelar Cita</Text>
                 </>
               )}
@@ -232,101 +233,89 @@ export default function AppointmentDetailScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
-    padding: 20,
-    gap: 16,
+    padding: spacing.xl,
+    gap: spacing.lg,
   },
   statusBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
   },
   statusText: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
   },
   doctorCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    gap: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xxl,
+    padding: spacing.xl,
+    ...shadows.card,
   },
   doctorAvatar: {
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: '#ECFEFF',
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   doctorName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
   },
   doctorSpecialty: {
-    fontSize: 14,
-    color: '#64748B',
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   detailsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xxl,
+    padding: spacing.xl,
+    ...shadows.card,
   },
   notesCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xxl,
+    padding: spacing.xl,
+    ...shadows.card,
   },
   notesTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#94A3B8',
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    color: colors.textMuted,
     textTransform: 'uppercase',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   notesText: {
-    fontSize: 15,
-    color: '#334155',
+    fontSize: fontSize.lg,
+    color: colors.text,
     lineHeight: 22,
   },
 
   // Cancel section
   cancelSection: {
-    marginTop: 8,
-    gap: 8,
+    marginTop: spacing.sm,
+    gap: spacing.sm,
   },
   cancelButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#DC2626',
-    paddingVertical: 16,
-    borderRadius: 14,
+    gap: spacing.sm,
+    backgroundColor: colors.error,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.xl,
     minHeight: 52,
   },
   cancelButtonPressed: {
@@ -336,13 +325,13 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.semibold,
+    color: colors.white,
   },
   cancelErrorText: {
-    color: '#DC2626',
-    fontSize: 14,
+    color: colors.error,
+    fontSize: fontSize.md,
     textAlign: 'center',
   },
 });
@@ -356,30 +345,30 @@ const notFoundStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    padding: 24,
-    gap: 12,
+    backgroundColor: colors.background,
+    padding: spacing.xxl,
+    gap: spacing.md,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontSize: fontSize.xxxl,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#64748B',
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   button: {
-    marginTop: 12,
-    backgroundColor: '#0891B2',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
+    marginTop: spacing.md,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 14,
+    color: colors.white,
+    fontWeight: fontWeight.semibold,
+    fontSize: fontSize.md,
   },
 });
